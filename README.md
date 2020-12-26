@@ -32,8 +32,6 @@ ini semua gratis, jangan pelit ⭐️ ya :D
 
 <div align="center"">
 <details>
- <summary> DEPLOY TO HEROKU</summary>
-
 
 [![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/Imszy17/WhatsApp-BOT)
 
