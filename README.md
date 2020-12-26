@@ -34,6 +34,7 @@ ini semua gratis, jangan pelit ⭐️ ya :D
 <details>
  <summary> DEPLOY TO HEROKU</summary>
 
+
 [![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/Imszy17/WhatsApp-BOT)
 
 </details>
@@ -47,8 +48,8 @@ This project require NodeJS v12.
 Clone this project
 
 ```bash
-> git clone https://github.com/ArugaZ/whatsapp-bot.git
-> cd whatsapp-bot
+> git clone https://github.com/ArugaZ/WhatsApp-BOT.git
+> cd WhatsApp-BOT
 ```
 
 Install the dependencies:
