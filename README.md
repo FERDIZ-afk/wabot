@@ -30,9 +30,14 @@ ini semua gratis, jangan pelit ⭐️ ya :D
 <p align="center"><a href="https://wa.me/447520622174?text=%23menu" target="_blank">My Whatsapp BOT</a>.</p>
 </div>
 
-### Deploy to heroku
+<div align="center"">
+<details>
+ <summary> DEPLOY TO HEROKU</summary>
 
 [![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/Imszy17/WhatsApp-BOT)
+
+</details>
+</div>
 
 ## Getting Started
 
