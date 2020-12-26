@@ -1,5 +1,5 @@
 {
-  "name": "KryPtoN WhatsApp Bot",
+  "name": "WhatsApp-BOT",
   "description": "WhatsApp Bot running on Javascript",
   "keywords": [
     "whatsapp",
@@ -8,7 +8,7 @@
     "modular",
     "productivity"
   ],
-  "repository": "https://github.com/Kry9toN/KryPtoN-WhatsApp-Bot",
+  "repository": "https://github.com/Imszy17/WhatsApp-BOT",
   "website": "",
   "stack": "container",
   "env": {
