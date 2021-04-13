@@ -1,30 +1,25 @@
 module.exports = {
-    env: {
-        commonjs: true,
-        es6: true,
-        node: true
+    'env': {
+        'commonjs': true,
+        'es2021': true,
+        'node': true
     },
-    extends: 'standard',
-    globals: {
-        Atomics: 'readonly',
-        SharedArrayBuffer: 'readonly'
+    'extends': 'eslint:recommended',
+    'parserOptions': {
+        'ecmaVersion': 12
     },
-    parserOptions: {
-        ecmaVersion: 2018
-    },
-    rules: {
-        eqeqeq: 0,
-        indent: [2, 4],
-        camelcase: 1,
-        'no-var': 2,
-        'no-unused-vars': 1,
-        'no-unused-expressions': 0,
-        'no-self-assign': 0,
-        'no-undef': 0,
-        'no-case-declarations': 0,
-        'prefer-promise-reject-errors': 1,
-        'object-property-newline': 0,
-        'no-useless-escape': 0,
-        'prefer-regex-literals': 0
+    'rules': {
+        'no-empty': 'warn',
+        'no-extra-semi': 'warn',
+        'no-unexpected-multiline': 'warn',
+        'default-case': 'error',
+        'default-case-last': 'error',
+        'no-alert': 'warn',
+        'no-empty-function': 'warn',
+        'no-invalid-this': 'warn',
+        'no-useless-catch': 'warn',
+        'require-await': 'error',
+        'quotes': ['warn', 'single'],
+        'no-async-promise-executor': 'off'
     }
 }

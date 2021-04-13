@@ -1,94 +1,138 @@
+/* eslint-disable no-unused-vars */
 const { create, Client } = require('@open-wa/wa-automate')
+const { color, options } = require('./tools')
+const { ind, eng } = require('./message/text/lang/')
+const { loader } = require('./function')
+const { version, bugs } = require('./package.json')
+const msgHandler = require('./message/index.js')
 const figlet = require('figlet')
-const options = require('./utils/options')
-const { color, messageLog } = require('./utils')
-const HandleMsg = require('./HandleMsg')
+const canvas = require('discord-canvas')
+const { ownerBot } = require('./config.json')
+const fs = require('fs-extra')
+const { groupLimit, memberLimit } = require('./database/bot/setting.json')
 
-const start = (aruga = new Client()) => {
-    console.log(color(figlet.textSync('----------------', { horizontalLayout: 'default' })))
-    console.log(color(figlet.textSync('ARUGA BOT', { font: 'Ghost', horizontalLayout: 'default' })))
-    console.log(color(figlet.textSync('----------------', { horizontalLayout: 'default' })))
-    console.log(color('[DEV]'), color('ArugaZ', 'yellow'))
-    console.log(color('[~>>]'), color('BOT Started!', 'green'))
+const start = (bocchi = new Client()) => {
+    console.log(color(figlet.textSync('BocchiBot', 'Larry 3D'), 'cyan'))
+    console.log(color('=> Bot successfully loaded! Database:', 'yellow'), color(loader.getAllDirFiles('./database').length), color('Library:', 'yellow'), color(loader.getAllDirFiles('./lib').length), color('Function:', 'yellow'), color(loader.getAllDirFiles('./function').length))
+    console.log(color('=> Source code version:', 'yellow'), color(version))
+    console.log(color('=> Bug? Error? Suggestion? Visit here:', 'yellow'), color(bugs.url))
+    console.log(color('[BOCCHI]'), color('BocchiBot is now online!', 'yellow'))
+    console.log(color('[DEV]', 'cyan'), color('Welcome back, Owner! Hope you are doing well~', 'magenta'))
 
-    // Mempertahankan sesi agar tetap nyala
-    aruga.onStateChanged((state) => {
-        console.log(color('[~>>]', 'red'), state)
-        if (state === 'CONFLICT' || state === 'UNLAUNCHED') aruga.forceRefocus()
+    // Uncomment code di bawah untuk mengaktifkan auto-update file changes. Tidak disarankan untuk long-time use.
+    // Uncomment code below to activate auto-update file changes. Not recommended for long-time use.
+    // loader.nocache('../message/index.js', (m) => console.log(color('[WATCH]', 'orange'), color(`=> '${m}'`, 'yellow'), 'file is updated!'))
+
+    bocchi.onStateChanged((state) => {
+        console.log(color('[BOCCHI]'), state)
+        if (state === 'UNPAIRED' || state === 'CONFLICT' || state === 'UNLAUNCHED') bocchi.forceRefocus()
     })
 
-    // ketika bot diinvite ke dalam group
-    aruga.onAddedToGroup(async (chat) => {
-	const groups = await aruga.getAllGroups()
-	// kondisi ketika batas group bot telah tercapai,ubah di file settings/setting.json
-	if (groups.length > groupLimit) {
-	await aruga.sendText(chat.id, `Sorry, the group on this Bot is full\nMax Group is: ${groupLimit}`).then(() => {
-	      aruga.leaveGroup(chat.id)
-	      aruga.deleteChat(chat.id)
-	  }) 
-	} else {
-	// kondisi ketika batas member group belum tercapai, ubah di file settings/setting.json
-	    if (chat.groupMetadata.participants.length < memberLimit) {
-	    await aruga.sendText(chat.id, `Sorry, Bot comes out if the group members do not exceed ${memberLimit} people`).then(() => {
-	      aruga.leaveGroup(chat.id)
-	      aruga.deleteChat(chat.id)
-	    })
-	    } else {
-        await aruga.simulateTyping(chat.id, true).then(async () => {
-          await aruga.sendText(chat.id, `Hai minna~, Im Aruga Bot. To find out the commands on this bot type ${prefix}menu`)
-        })
-	    }
-	}
-    })
-
-    // ketika seseorang masuk/keluar dari group
-    aruga.onGlobalParicipantsChanged(async (event) => {
-        const host = await aruga.getHostNumber() + '@c.us'
-		const welcome = JSON.parse(fs.readFileSync('./settings/welcome.json'))
-		const isWelcome = welcome.includes(event.chat)
-		let profile = await aruga.getProfilePicFromServer(event.who)
-		if (profile == '' || profile == undefined) profile = 'https://encrypted-tbn0.gstatic.com/images?q=tbn%3AANd9GcTQcODjk7AcA4wb_9OLzoeAdpGwmkJqOYxEBA&usqp=CAU'
-        // kondisi ketika seseorang diinvite/join group lewat link
-        if (event.action === 'add' && event.who !== host && isWelcome) {
-			await aruga.sendFileFromUrl(event.chat, profile, 'profile.jpg', '')
-            await aruga.sendTextWithMentions(event.chat, `Hello, Welcome to the group @${event.who.replace('@c.us', '')} \n\nHave fun with us✨`)
-        }
-        // kondisi ketika seseorang dikick/keluar dari group
-        if (event.action === 'remove' && event.who !== host) {
-			await aruga.sendFileFromUrl(event.chat, profile, 'profile.jpg', '')
-            await aruga.sendTextWithMentions(event.chat, `Good bye @${event.who.replace('@c.us', '')}, We'll miss you✨`)
+    bocchi.onAddedToGroup(async (chat) => {
+        const gc = await bocchi.getAllGroups()
+        console.log(color('[BOCCHI]'), 'Added to a new group. Name:', color(chat.contact.name, 'yellow'), 'Total members:', color(chat.groupMetadata.participants.length, 'yellow'))
+        if (chat.groupMetadata.participants.includes(ownerBot)) {
+            await bocchi.sendText(chat.id, ind.addedGroup(chat))
+        } else if (gc.length > groupLimit) {
+            await bocchi.sendText(chat.id, `Max groups reached!\n\nCurrent status: ${gc.length}/${groupLimit}`)
+            await bocchi.deleteChat(chat.id)
+            await bocchi.leaveGroup(chat.id)
+        } else if (chat.groupMetadata.participants.length < memberLimit) {
+            await bocchi.sendText(chat.id, `Need at least ${memberLimit} members in group!`)
+            await bocchi.deleteChat(chat.id)
+            await bocchi.leaveGroup(chat.id)
+        } else {
+            await bocchi.sendText(chat.id, ind.addedGroup(chat))
         }
     })
 
-    aruga.onIncomingCall(async (callData) => {
-        // ketika seseorang menelpon nomor bot akan mengirim pesan
-        await aruga.sendText(callData.peerJid, 'Maaf sedang tidak bisa menerima panggilan.\n\n-bot')
-        .then(async () => {
-            // bot akan memblock nomor itu
-            await aruga.contactBlock(callData.peerJid)
-        })
-    })
-
-    // ketika seseorang mengirim pesan
-    aruga.onMessage(async (message) => {
-        aruga.getAmountOfLoadedMessages() // menghapus pesan cache jika sudah 3000 pesan.
+    bocchi.onMessage((message) => {
+        // Uncomment code di bawah untuk mengaktifkan auto-delete cache pesan.
+        // Uncomment code below to activate auto-delete message cache.
+        /*
+        bocchi.getAmountOfLoadedMessages()
             .then((msg) => {
-                if (msg >= 3000) {
-                    console.log('[aruga]', color(`Loaded Message Reach ${msg}, cuting message cache...`, 'yellow'))
-                    aruga.cutMsgCache()
+                if (msg >= 1000) {
+                    console.log(color('[BOCCHI]'), color(`Loaded message reach ${msg}, cuting message cache...`, 'yellow'))
+                    bocchi.cutMsgCache()
+                    console.log(color('[BOCCHI]'), color('Cache deleted!', 'yellow'))
                 }
             })
-        HandleMsg(aruga, message)    
-    
+        */
+        
+        // Comment code msgHandler di bawah untuk mengaktifkan auto-update. Kemudian, uncomment code require di bawah msgHandler.
+        // Comment code below to activate auto-update. Then, uncomment require code below msgHandler.
+        msgHandler(bocchi, message)
+        // require('./message/index.js')(bocchi, message)
     })
-	
-    // Message log for analytic
-    aruga.onAnyMessage((anal) => { 
-        messageLog(anal.fromMe, anal.type)
+
+    bocchi.onIncomingCall(async (callData) => {
+        await bocchi.sendText(callData.peerJid, ind.blocked(ownerBot))
+        await bocchi.contactBlock(callData.peerJid)
+        console.log(color('[BLOCK]', 'red'), color(`${callData.peerJid} has been blocked.`, 'yellow'))
+    })
+
+    bocchi.onGlobalParticipantsChanged(async (event) => {
+        const _welcome = JSON.parse(fs.readFileSync('./database/group/welcome.json'))
+        const isWelcome = _welcome.includes(event.chat)
+        const gcChat = await bocchi.getChatById(event.chat)
+        const pcChat = await bocchi.getContact(event.who)
+        let { pushname, verifiedName, formattedName } = pcChat
+        pushname = pushname || verifiedName || formattedName
+        const { name, groupMetadata } = gcChat
+        const botNumbers = await bocchi.getHostNumber() + '@c.us'
+        try {
+            if (event.action === 'add' && event.who !== botNumbers && isWelcome) {
+                const pic = await bocchi.getProfilePicFromServer(event.who)
+                if (pic === undefined) {
+                    var picx = 'https://i.ibb.co/Tq7d7TZ/age-hananta-495-photo.png'
+                } else {
+                    picx = pic
+                }
+                const welcomer = await new canvas.Welcome()
+                    .setUsername(pushname)
+                    .setDiscriminator(event.who.substring(6, 10))
+                    .setMemberCount(groupMetadata.participants.length)
+                    .setGuildName(name)
+                    .setAvatar(picx)
+                    .setColor('border', '#00100C')
+                    .setColor('username-box', '#00100C')
+                    .setColor('discriminator-box', '#00100C')
+                    .setColor('message-box', '#00100C')
+                    .setColor('title', '#00FFFF')
+                    .setBackground('https://www.photohdx.com/images/2016/05/red-blurry-background.jpg')
+                    .toAttachment()
+                const base64 = `data:image/png;base64,${welcomer.toBuffer().toString('base64')}`
+                await bocchi.sendFile(event.chat, base64, 'welcome.png', `Welcome ${pushname}!`)
+            } else if (event.action === 'remove' && event.who !== botNumbers && isWelcome) {
+                const pic = await bocchi.getProfilePicFromServer(event.who)
+                if (pic === undefined) {
+                    var picxs = 'https://i.ibb.co/Tq7d7TZ/age-hananta-495-photo.png'
+                } else {
+                    picxs = pic
+                }
+                const bye = await new canvas.Goodbye()
+                    .setUsername(pushname)
+                    .setDiscriminator(event.who.substring(6, 10))
+                    .setMemberCount(groupMetadata.participants.length)
+                    .setGuildName(name)
+                    .setAvatar(picxs)
+                    .setColor('border', '#00100C')
+                    .setColor('username-box', '#00100C')
+                    .setColor('discriminator-box', '#00100C')
+                    .setColor('message-box', '#00100C')
+                    .setColor('title', '#00FFFF')
+                    .setBackground('https://www.photohdx.com/images/2016/05/red-blurry-background.jpg')
+                    .toAttachment()
+                const base64 = `data:image/png;base64,${bye.toBuffer().toString('base64')}`
+                await bocchi.sendFile(event.chat, base64, 'welcome.png', `Bye ${pushname}, we will miss you~`)
+            }
+        } catch (err) {
+            console.error(err)
+        }
     })
 }
 
-//create session
-create(options(true, start))
-    .then((aruga) => start(aruga))
-    .catch((err) => new Error(err))
+create(options(start))
+    .then((bocchi) => start(bocchi))
+    .catch((err) => console.error(err))
